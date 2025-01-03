@@ -1,5 +1,4 @@
 import folium
-import json
 import os
 import django
 import sys
@@ -95,6 +94,7 @@ def show_pokemon(request, pokemon_id):
         'pokemon_id': requested_pokemon.id,
         'img_url': image_url,
         'title_ru': requested_pokemon.title,
+        'description': requested_pokemon.description
     }
     return render(request, 'pokemon.html', context={
         'map': folium_map._repr_html_(), 'pokemon': pokemon
