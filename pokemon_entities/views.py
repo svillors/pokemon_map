@@ -1,8 +1,17 @@
 import folium
 import json
+import os
+import django
+import sys
 
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pogomap.settings')
+django.setup()
+
+from pokemon_entities.models import Pokemon
 
 
 MOSCOW_CENTER = [55.751244, 37.618423]
@@ -40,11 +49,16 @@ def show_all_pokemons(request):
             )
 
     pokemons_on_page = []
+    pokemons = Pokemon.objects.all()
     for pokemon in pokemons:
+        if pokemon.image:
+            image_url = request.build_absolute_uri(pokemon.image.url)
+        else:
+            image_url = None
         pokemons_on_page.append({
-            'pokemon_id': pokemon['pokemon_id'],
-            'img_url': pokemon['img_url'],
-            'title_ru': pokemon['title_ru'],
+            'pokemon_id': pokemon.id,
+            'img_url': image_url,
+            'title_ru': pokemon.title,
         })
 
     return render(request, 'mainpage.html', context={
