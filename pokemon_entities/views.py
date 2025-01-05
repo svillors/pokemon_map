@@ -22,6 +22,12 @@ DEFAULT_IMAGE_URL = (
 )
 
 
+def get_pokemon_image(request, image_url, default_url=DEFAULT_IMAGE_URL):
+    if image_url and hasattr(image_url, 'url'):
+        return request.build_absolute_uri(image_url.url)
+    return default_url
+
+
 def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
     icon = folium.features.CustomIcon(
         image_url,
@@ -40,10 +46,7 @@ def show_all_pokemons(request):
     pokemon_entities = PokemonEntity.objects.filter(
         appeared_at__lt=now(), disappeared_at__gt=now())
     for pokemon_entity in pokemon_entities:
-        image_url = (request.build_absolute_uri(
-            pokemon_entity.pokemon.image.url)
-            if pokemon_entity.pokemon.image
-            else DEFAULT_IMAGE_URL)
+        image_url = get_pokemon_image(request, pokemon_entity.pokemon.image)
         add_pokemon(
             folium_map, pokemon_entity.latitude,
             pokemon_entity.longitude,
@@ -53,10 +56,7 @@ def show_all_pokemons(request):
     pokemons_on_page = []
     pokemons = Pokemon.objects.all()
     for pokemon in pokemons:
-        image_url = (request.build_absolute_uri(pokemon.image.url)
-                     if pokemon.image
-                     else DEFAULT_IMAGE_URL)
-
+        image_url = get_pokemon_image(request, pokemon.image)
         pokemons_on_page.append({
            'pokemon_id': pokemon.id,
            'img_url': image_url,
@@ -82,10 +82,7 @@ def show_pokemon(request, pokemon_id):
         disappeared_at__gt=now(),
     )
 
-    image_url = (request.build_absolute_uri(requested_pokemon.image.url)
-                 if requested_pokemon.image
-                 else DEFAULT_IMAGE_URL)
-
+    image_url = get_pokemon_image(request, requested_pokemon.image)
     for pokemon_entity in pokemon_entities:
         add_pokemon(
             folium_map, pokemon_entity.latitude,
@@ -94,10 +91,10 @@ def show_pokemon(request, pokemon_id):
         )
 
     if requested_pokemon.previous_evolution:
-        previous_evolution_image_url = (request.build_absolute_uri(
-                requested_pokemon.previous_evolution.image.url)
-                if requested_pokemon.previous_evolution.image
-                else DEFAULT_IMAGE_URL)
+        previous_evolution_image_url = get_pokemon_image(
+            request,
+            requested_pokemon.previous_evolution.image
+        )
 
         previous_evolution = {
             "title_ru": requested_pokemon.previous_evolution.title,
