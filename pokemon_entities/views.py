@@ -40,8 +40,10 @@ def show_all_pokemons(request):
     pokemon_entities = PokemonEntity.objects.filter(
         appeared_at__lt=now(), disappeared_at__gt=now())
     for pokemon_entity in pokemon_entities:
-        image_url = request.build_absolute_uri(
+        image_url = (request.build_absolute_uri(
             pokemon_entity.pokemon.image.url)
+            if pokemon_entity.pokemon.image
+            else DEFAULT_IMAGE_URL)
         add_pokemon(
             folium_map, pokemon_entity.latitude,
             pokemon_entity.longitude,
@@ -51,18 +53,15 @@ def show_all_pokemons(request):
     pokemons_on_page = []
     pokemons = Pokemon.objects.all()
     for pokemon in pokemons:
-        if pokemon.image:
-            image_url = request.build_absolute_uri(pokemon.image.url)
-            pokemons_on_page.append({
-                'pokemon_id': pokemon.id,
-                'img_url': image_url,
-                'title_ru': pokemon.title,
-            })
-        else:
-            pokemons_on_page.append({
-                'pokemon_id': pokemon.id,
-                'title_ru': pokemon.title,
-            })
+        image_url = (request.build_absolute_uri(pokemon.image.url)
+                     if pokemon.image
+                     else DEFAULT_IMAGE_URL)
+
+        pokemons_on_page.append({
+           'pokemon_id': pokemon.id,
+           'img_url': image_url,
+           'title_ru': pokemon.title,
+        })
 
     return render(request, 'mainpage.html', context={
         'map': folium_map._repr_html_(),
@@ -82,22 +81,24 @@ def show_pokemon(request, pokemon_id):
         appeared_at__lt=now(),
         disappeared_at__gt=now(),
     )
-    if requested_pokemon.image:
-        image_url = request.build_absolute_uri(requested_pokemon.image.url)
-    else:
-        image_url = None
+
+    image_url = (request.build_absolute_uri(requested_pokemon.image.url)
+                 if requested_pokemon.image
+                 else DEFAULT_IMAGE_URL)
+
     for pokemon_entity in pokemon_entities:
         add_pokemon(
             folium_map, pokemon_entity.latitude,
             pokemon_entity.longitude,
             image_url
         )
+
     if requested_pokemon.previous_evolution:
-        if requested_pokemon.previous_evolution.image:
-            previous_evolution_image_url = request.build_absolute_uri(
+        previous_evolution_image_url = (request.build_absolute_uri(
                 requested_pokemon.previous_evolution.image.url)
-        else:
-            previous_evolution_image_url = None
+                if requested_pokemon.previous_evolution.image
+                else DEFAULT_IMAGE_URL)
+
         previous_evolution = {
             "title_ru": requested_pokemon.previous_evolution.title,
             "pokemon_id": requested_pokemon.previous_evolution.id,
