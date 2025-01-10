@@ -70,8 +70,7 @@ def show_all_pokemons(request):
 
 
 def show_pokemon(request, pokemon_id):
-    requested_pokemon = get_object_or_404(
-        Pokemon.objects.filter(id=int(pokemon_id)).first())
+    requested_pokemon = get_object_or_404(Pokemon, id=int(pokemon_id))
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
     current_time = now()
@@ -89,28 +88,24 @@ def show_pokemon(request, pokemon_id):
             image_url
         )
 
-    previous_evolution = (
-        {
+    previous_evolution = None
+    if requested_pokemon.previous_evolution:
+        previous_evolution = {
             "title_ru": requested_pokemon.previous_evolution.title,
             "pokemon_id": requested_pokemon.previous_evolution.id,
             "img_url": get_pokemon_image(
                 request, requested_pokemon.previous_evolution.image
             )
         }
-        if requested_pokemon.previous_evolution
-        else None
-    )
 
-    next_evolution = requested_pokemon.next_evolution.first()
-    next_evolution = (
-        {
+    next_evolution_pokemon = requested_pokemon.next_evolution.first()
+    next_evolution = None
+    if next_evolution_pokemon:
+        next_evolution = {
             "title_ru": next_evolution.title,
             "pokemon_id": next_evolution.id,
             "img_url": get_pokemon_image(request, next_evolution.image)
         }
-        if next_evolution
-        else None
-    )
 
     pokemon = {
         'pokemon_id': requested_pokemon.id,
